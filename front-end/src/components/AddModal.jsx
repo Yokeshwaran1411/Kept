@@ -8,13 +8,17 @@ const SELECT_STYLE = {
     appearance: 'none', cursor: 'pointer',
 };
 
-export default function AddModal({ addModalOpen, setAddModalOpen, showToast, onAdd, editData, onEditDone }) {
+export default function AddModal({ addModalOpen, setAddModalOpen, showToast, onAdd, editData, onEditDone, onAddSubscription }) {
     const isEdit = Boolean(editData);
 
     const [name,          setName]          = useState('');
     const [amount,        setAmount]        = useState('');
+    const [price,         setPrice]         = useState('');
     const [type,          setType]          = useState('');
     const [renewalDate,   setRenewalDate]   = useState('');
+    const [renewIn,       setRenewIn]       = useState('14');
+    const [category,      setCategory]      = useState('Entertainment');
+    const [plan,          setPlan]          = useState('Standard');
     const [paymentMethod, setPaymentMethod] = useState('');
     const [paymentDetails,setPaymentDetails]= useState('');
     const [loading,       setLoading]       = useState(false);
@@ -25,7 +29,9 @@ export default function AddModal({ addModalOpen, setAddModalOpen, showToast, onA
         if (editData) {
             setName(editData.name || '');
             setAmount(editData.amount || '');
-            setType(editData.type || '');
+            setType(editData.type || editData.category || '');
+            setCategory(editData.category || 'Entertainment');
+            setPlan(editData.plan || 'Standard');
             setRenewalDate(editData.renewal_date ? editData.renewal_date.slice(0, 10) : '');
             setPaymentMethod(editData.method || '');
             setPaymentDetails(editData.method_details || '');
@@ -34,7 +40,8 @@ export default function AddModal({ addModalOpen, setAddModalOpen, showToast, onA
     }, [editData]);
 
     const reset = () => {
-        setName(''); setAmount(''); setType(''); setRenewalDate('');
+        setName(''); setAmount(''); setPrice(''); setType(''); setRenewalDate('');
+        setRenewIn('14'); setCategory('Entertainment'); setPlan('Standard');
         setPaymentMethod(''); setPaymentDetails(''); setAdvOpen(false);
     };
 
@@ -48,7 +55,7 @@ export default function AddModal({ addModalOpen, setAddModalOpen, showToast, onA
             const user = JSON.parse(storedUser);
 
             const payload = {
-                ctid: user.id, name, amount, type,
+                ctid: user.id, name, amount: amount || price, type: type || category,
                 renewal_date: renewalDate || null,
                 method: paymentMethod || null,
                 method_details: paymentDetails || null,
@@ -61,6 +68,20 @@ export default function AddModal({ addModalOpen, setAddModalOpen, showToast, onA
 
             if (res.ok) {
                 showToast(isEdit ? 'Subscription updated!' : "Subscription added!");
+                if (!isEdit && onAddSubscription) {
+                    const newSub = {
+                        id: Date.now(),
+                        name: name.trim(),
+                        plan: plan || 'Standard',
+                        price: Number(amount || price) || 299,
+                        renewIn: Number(renewIn) || 14,
+                        status: 'Active',
+                        category: category || type || 'Entertainment',
+                        method: paymentMethod || 'Visa •••• 4214',
+                        started: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+                    };
+                    onAddSubscription(newSub);
+                }
                 reset();
                 setAddModalOpen(false);
                 if (isEdit && onEditDone) onEditDone();
@@ -101,8 +122,8 @@ export default function AddModal({ addModalOpen, setAddModalOpen, showToast, onA
                         <input
                             type="number" min="0" step="0.01"
                             placeholder="0.00"
-                            value={amount}
-                            onChange={e => setAmount(e.target.value)}
+                            value={amount || price}
+                            onChange={e => { setAmount(e.target.value); setPrice(e.target.value); }}
                             style={{ paddingLeft: '36px' }}
                         />
                     </div>
@@ -126,7 +147,7 @@ export default function AddModal({ addModalOpen, setAddModalOpen, showToast, onA
                 {/* Category / type */}
                 <div className="field">
                     <label>Category</label>
-                    <select style={SELECT_STYLE} value={type} onChange={e => setType(e.target.value)}>
+                    <select style={SELECT_STYLE} value={type || category} onChange={e => { setType(e.target.value); setCategory(e.target.value); }}>
                         <option value="">Select category</option>
                         <option>Entertainment</option>
                         <option>Productivity</option>
@@ -144,6 +165,10 @@ export default function AddModal({ addModalOpen, setAddModalOpen, showToast, onA
                     {advOpen ? '– Hide payment details' : '+ Add payment details'}
                 </button>
                 <div className={`adv-fields ${advOpen ? 'open' : ''}`}>
+                    <div className="field">
+                        <label>Plan / Tier</label>
+                        <input type="text" placeholder="Standard / Pro / Premium" value={plan} onChange={e => setPlan(e.target.value)} />
+                    </div>
                     <div className="field">
                         <label>Payment method</label>
                         <select style={SELECT_STYLE} value={paymentMethod} onChange={e => { setPaymentMethod(e.target.value); setPaymentDetails(''); }}>
