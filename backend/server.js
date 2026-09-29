@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const userService = require('./Services/userService');
+const userService = require('./Services/userService.js');
+const serviceMgmt = require('./Services/serviceMgmt.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -67,6 +68,26 @@ app.put('/api/users/update', async (req, res) => {
         console.error('Update error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+
+app.get('/health/db', async (req, res) => {
+    try {
+        const dbStatus = await serviceMgmt.checkDatabaseConnection();
+        if (dbStatus) {
+            res.status(200).json({ message: 'Database connection is healthy' });
+        } else {
+            res.status(500).json({ error: 'Database connection failed' });
+        }
+    } catch (error) {
+        console.error('Database health check error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'Server is running' });
 });
 
 app.listen(PORT, () => {

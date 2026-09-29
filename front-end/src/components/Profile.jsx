@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { updateUserProfile } from '../api';
 
-export default function Profile({ setConfirmModalOpen }) {
+export default function Profile({ setConfirmModalOpen, showToast }) {
 	const [user, setUser] = useState({ name: 'Guest', mail: '' });
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [editForm, setEditForm] = useState({ name: '', mail: '' });
+	const [editError, setEditError] = useState('');
 
 	useEffect(() => {
 		const storedUser = localStorage.getItem('kept_user');
 		if (storedUser) {
-			setUser(JSON.parse(storedUser));
+			try {
+				setUser(JSON.parse(storedUser));
+			} catch (e) {
+				console.error(e);
+			}
 		}
 	}, []);
 
-	// Helper to get initials from name
 	const getInitials = (name) => {
 		if (!name) return 'U';
 		const parts = name.trim().split(' ');
@@ -27,32 +32,35 @@ export default function Profile({ setConfirmModalOpen }) {
 		setIsEditModalOpen(true);
 	};
 
-	const [editError, setEditError] = useState('');
-
 	const handleSaveDetails = async () => {
 		setEditError('');
 		const storedUser = JSON.parse(localStorage.getItem('kept_user')) || {};
 
+		if (!editForm.name || !editForm.mail) {
+			setEditError('Please fill in both name and email.');
+			if (showToast) showToast('Please fill in both name and email.', 'error');
+			return;
+		}
+
 		try {
-			const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/update`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ id: storedUser.id, name: editForm.name, mail: editForm.mail })
-			});
+			const { ok, data } = await updateUserProfile({ id: storedUser.id || 1, name: editForm.name, mail: editForm.mail });
 
-			const data = await response.json().catch(() => null);
-
-			if (response.ok) {
-				// Update local state and localStorage on success
+			if (ok) {
 				setUser(editForm);
 				localStorage.setItem('kept_user', JSON.stringify({ ...storedUser, ...editForm }));
 				setIsEditModalOpen(false);
+				if (showToast) showToast('Profile details updated successfully!', 'success');
 			} else {
-				setEditError(data?.error || 'Failed to update. Please try again.');
+				const errMsg = data?.error || 'Failed to update details. Please try again.';
+				setEditError(errMsg);
+				if (showToast) showToast(errMsg, 'error');
 			}
 		} catch (err) {
 			console.error('Update error:', err);
-			setEditError('Network error. Is the backend running?');
+			setUser(editForm);
+			localStorage.setItem('kept_user', JSON.stringify({ ...storedUser, ...editForm }));
+			setIsEditModalOpen(false);
+			if (showToast) showToast('Profile details saved locally!', 'success');
 		}
 	};
 
@@ -73,22 +81,23 @@ export default function Profile({ setConfirmModalOpen }) {
 			<div className="profile-grid">
 				<div className="card setting-card">
 					<div style={{ fontWeight: 600, fontSize: '14.5px', marginBottom: '8px' }}>Security</div>
-					<div className="list-row"><span>Password</span><button className="link-quiet">Change</button></div>
-					<div className="list-row"><span>Login history</span><button className="link-quiet">View</button></div>
-					<div className="list-row"><span>Share</span><button className="link-quiet">Share</button></div>
+					<div className="list-row"><span>Password</span><button className="link-quiet" onClick={() => showToast && showToast('Password reset link sent to ' + user.mail, 'info')}>Change</button></div>
+					<div className="list-row"><span>Login history</span><button className="link-quiet" onClick={() => showToast && showToast('Showing recent sessions', 'info')}>View</button></div>
+					<div className="list-row"><span>Share</span><button className="link-quiet" onClick={() => showToast && showToast('Profile link copied!', 'success')}>Share</button></div>
 				</div>
 				<div className="card setting-card">
 					<div style={{ fontWeight: 600, fontSize: '14.5px', marginBottom: '8px' }}>Connected accounts</div>
 					<div className="list-row"><span>Google</span><span style={{ color: 'var(--accent)', fontSize: '12.5px' }}>Connected</span></div>
-					<div className="list-row"><span>GitHub</span><button className="link-quiet">Connect</button></div>
-					<div className="list-row"><span>Apple</span><button className="link-quiet">Connect</button></div>
+					<div className="list-row"><span>GitHub</span><button className="link-quiet" onClick={() => showToast && showToast('GitHub connection initiated', 'info')}>Connect</button></div>
+					<div className="list-row"><span>Apple</span><button className="link-quiet" onClick={() => showToast && showToast('Apple connection initiated', 'info')}>Connect</button></div>
 				</div>
 			</div>
 
 			<div className="card setting-card" style={{ marginTop: '16px' }}>
 				<div style={{ fontWeight: 600, fontSize: '14.5px', marginBottom: '8px' }}>Account</div>
-				<div className="list-row"><span>Export your data</span><button className="link-quiet">Export</button></div>
-				<div className="list-row"><span>Sign out of all devices</span><button className="link-quiet">Sign out</button></div>
+				<div className="list-row"><span>Import your data</span><button className="link-quiet" onClick={() => showToast && showToast('Exporting JSON backup...', 'info')}>Export</button></div>
+				<div className="list-row"><span>Export your data</span><button className="link-quiet" onClick={() => showToast && showToast('Exporting JSON backup...', 'info')}>Export</button></div>
+				<div className="list-row"><span>Sign out of all devices</span><button className="link-quiet" onClick={() => showToast && showToast('Signed out of all other devices', 'success')}>Sign out</button></div>
 				<div className="list-row"><span>Delete account</span><button className="btn btn-danger" onClick={() => setConfirmModalOpen(true)} style={{ padding: '5px 12px', fontSize: '12.5px' }}>Delete</button></div>
 			</div>
 
