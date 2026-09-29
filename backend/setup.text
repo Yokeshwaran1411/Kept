@@ -1,0 +1,2 @@
+mysql comment
+mysql -h susbscription-mgmt-yokeshwaran135-251a.h.aivencloud.com -P 13995 -u avnadmin -p --ssl-mode=REQUIRED defaultdb

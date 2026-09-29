@@ -1,7 +1,16 @@
 import React from 'react';
 import SubCard from './SubCard';
+import EmptySubscriptions from './EmptySubscriptions';
 
-export default function Dashboard({ subscriptions, expandedCards, toggleCard, setActivePage }) {
+export default function Dashboard({ subscriptions, expandedCards, toggleCard, setActivePage, setAddModalOpen, onEdit, onDelete }) {
+	if (!subscriptions || subscriptions.length === 0) {
+		return (
+			<div className="page active empty-page">
+				<EmptySubscriptions setAddModalOpen={setAddModalOpen} />
+			</div>
+		);
+	}
+
 	const getGreeting = () => {
 		const hour = new Date().getHours();
 		if (hour < 12) return 'Good morning 👋';
@@ -9,7 +18,7 @@ export default function Dashboard({ subscriptions, expandedCards, toggleCard, se
 		return 'Good evening 👋';
 	};
 
-	const upcoming = [...subscriptions].sort((a, b) => a.renewIn - b.renewIn).slice(0, 4);
+	const upcoming = [...subscriptions].sort((a, b) => (a.renewIn || 0) - (b.renewIn || 0)).slice(0, 4);
 	const dateLabels = ['TODAY', 'SEP 05', 'SEP 12', 'OCT 01'];
 
 	return (
@@ -48,7 +57,7 @@ export default function Dashboard({ subscriptions, expandedCards, toggleCard, se
 						<button className="link-quiet" onClick={() => setActivePage('subscriptions')}>View all →</button>
 					</div>
 					<div className="sub-grid">
-						{subscriptions.slice(0, 4).map(s => <SubCard key={s.id} s={s} isOpen={expandedCards[s.id]} toggleCard={toggleCard} />)}
+				{subscriptions.slice(0, 4).map(s => <SubCard key={s.id} s={s} isOpen={expandedCards[s.id]} toggleCard={toggleCard} onEdit={onEdit} onDelete={onDelete} />)}
 					</div>
 
 					<div className="section-head">
@@ -64,16 +73,20 @@ export default function Dashboard({ subscriptions, expandedCards, toggleCard, se
 						<div><h2>Coming up</h2><div className="sub">Here's what will renew soon.</div></div>
 					</div>
 					<div className="card timeline-card">
-						{upcoming.map((s, i) => (
-							<div className="tl-item" key={i}>
-								<div className="tl-dot"></div>
-								<div style={{ flex: 1 }}>
-									<div className="tl-date">{dateLabels[i] || ''}</div>
-									<div className="tl-row"><span className="tl-name">{s.name}</span><span className="tl-price mono">₹{s.price}</span></div>
-									<div className="tl-when">{s.renewIn === 0 ? 'Renewing today' : `In ${s.renewIn} days`}</div>
+						{upcoming.map((s, i) => {
+							const price = Number(s.duration || s.price || 0);
+							const renewIn = s.renewIn || 0;
+							return (
+								<div className="tl-item" key={i}>
+									<div className="tl-dot"></div>
+									<div style={{ flex: 1 }}>
+										<div className="tl-date">{dateLabels[i] || ''}</div>
+										<div className="tl-row"><span className="tl-name">{s.name}</span><span className="tl-price mono">₹{price}</span></div>
+										<div className="tl-when">{renewIn === 0 ? 'Renewing today' : `In ${renewIn} days`}</div>
+									</div>
 								</div>
-							</div>
-						))}
+							);
+						})}
 					</div>
 				</div>
 			</div>

@@ -37,7 +37,7 @@ body {
         background-size: 140% 140%, 140% 140%, auto;
         animation: driftGlow 26s ease-in-out infinite;
         color: var(--text);
-        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        font-family: 'Poppins', system-ui, -apple-system, sans-serif;
         min-height: 100vh;
         -webkit-font-smoothing: antialiased;
 }

@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import EmptySubscriptions from './EmptySubscriptions';
 
 const COLORS = ['#3ddc97', '#2bb97a', '#22c17e', '#0f7a52', '#e5a95f', '#e5695f'];
 
@@ -12,20 +13,29 @@ const mockTrendData = [
 	{ month: 'Sep', spend: 8420 },
 ];
 
-export default function Analytics({ activePage, subscriptions }) {
+export default function Analytics({ activePage, subscriptions, setAddModalOpen }) {
+	if (!subscriptions || subscriptions.length === 0) {
+		return (
+			<div className="page active empty-page">
+				<EmptySubscriptions setAddModalOpen={setAddModalOpen} />
+			</div>
+		);
+	}
 	const { total, categories, highestCategory, avgSubscription } = useMemo(() => {
 		let t = 0;
 		const cats = {};
 		subscriptions.forEach(s => {
-			t += s.price;
-			if (!cats[s.category]) cats[s.category] = { amount: 0, items: [] };
-			cats[s.category].amount += s.price;
-			cats[s.category].items.push(s);
+			const price = Number(s.duration || s.price || 0);
+			const category = s.type || s.category || 'General';
+			t += price;
+			if (!cats[category]) cats[category] = { amount: 0, items: [] };
+			cats[category].amount += price;
+			cats[category].items.push(s);
 		});
 
 		const sortedCats = Object.entries(cats).map(([name, data]) => ({
 			name,
-			value: data.amount, // for recharts
+			value: data.amount,
 			amount: data.amount,
 			items: data.items,
 			percent: Math.round((data.amount / (t || 1)) * 100)
