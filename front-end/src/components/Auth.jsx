@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { loginUser, registerUser } from '../api';
+import { getDeviceMetadata } from '../utils/device';
 
 export default function Auth({ onLogin, showToast }) {
 	const [isLogin, setIsLogin] = useState(true);
@@ -34,9 +35,11 @@ export default function Auth({ onLogin, showToast }) {
 		}
 
 		try {
+			const deviceInfo = getDeviceMetadata();
+
 			const { ok, data } = isLogin
-				? await loginUser({ mail: email, password })
-				: await registerUser({ name, mail: email, password });
+				? await loginUser({ mail: email, password, deviceInfo })
+				: await registerUser({ name, mail: email, password, deviceInfo });
 
 			if (ok) {
 				const userObj = data?.user || { mail: email, name: name || email.split('@')[0] };
