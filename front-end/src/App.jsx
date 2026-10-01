@@ -40,7 +40,10 @@ export default function App() {
 	// Subscriptions state
 	const [subscriptions, setSubscriptions] = useState([]);
 	const [loadingSubs, setLoadingSubs] = useState(true);
-	const [expandedCards, setExpandedCards] = useState({});
+
+	const [activePopoverSub, setActivePopoverSub] = useState(null);
+	const openPopover  = (sub) => setActivePopoverSub(sub);
+	const closePopover = ()    => setActivePopoverSub(null);
 
 	// Edit state
 	const [editData, setEditData] = useState(null);
@@ -56,7 +59,6 @@ export default function App() {
 
 	const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
 
-	const toggleCard = (id) => setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
 	const showToast = (msg, type = 'success') => {
 		setToastType(type);
 		setToastMsg(msg);
@@ -133,6 +135,7 @@ export default function App() {
 				setDeleteTarget(null);
 				setFabOpen(false);
 				setEditData(null);
+				closePopover();
 			}
 			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
 				e.preventDefault();
@@ -162,8 +165,8 @@ export default function App() {
 		showToast('Signed out successfully', 'info');
 	};
 
-	// Shared props
-	const cardProps = { subscriptions, expandedCards, toggleCard, onEdit: handleEdit, onDelete: handleDeleteRequest };
+	// Shared props for subscription cards
+	const cardProps = { subscriptions, activePopoverSub, openPopover, closePopover, onEdit: handleEdit, onDelete: handleDeleteRequest };
 
 	return (
 		<div className="shell">
@@ -187,12 +190,15 @@ export default function App() {
 					<SubscriptionList
 						subscriptions={subscriptions}
 						setSubscriptions={setSubscriptions}
-						expandedCards={expandedCards}
-						toggleCard={toggleCard}
+						activePopoverSub={activePopoverSub}
+						openPopover={openPopover}
+						closePopover={closePopover}
 						setAddModalOpen={setAddModalOpen}
 						showToast={showToast}
 						userEmail={userMail}
 						onAddSubscription={onAddSubscription}
+						onEdit={handleEdit}
+						onDelete={handleDeleteRequest}
 					/>
 				)}
 				{activePage === 'analytics'     && <Analytics activePage={activePage} subscriptions={subscriptions} setAddModalOpen={setAddModalOpen} />}

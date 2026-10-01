@@ -2,7 +2,7 @@ import React from 'react';
 import SubCard from './SubCard';
 import EmptySubscriptions from './EmptySubscriptions';
 
-export default function Dashboard({ subscriptions, expandedCards, toggleCard, setActivePage, setAddModalOpen, onEdit, onDelete }) {
+export default function Dashboard({ subscriptions, activePopoverSub, openPopover, closePopover, setActivePage, setAddModalOpen, onEdit, onDelete }) {
 	if (!subscriptions || subscriptions.length === 0) {
 		return (
 			<div className="page active empty-page">
@@ -57,7 +57,7 @@ export default function Dashboard({ subscriptions, expandedCards, toggleCard, se
 						<button className="link-quiet" onClick={() => setActivePage('subscriptions')}>View all →</button>
 					</div>
 					<div className="sub-grid">
-				{subscriptions.slice(0, 4).map(s => <SubCard key={s.id} s={s} isOpen={expandedCards[s.id]} toggleCard={toggleCard} onEdit={onEdit} onDelete={onDelete} />)}
+				{subscriptions.slice(0, 4).map(s => <SubCard key={s.id} s={s} isActive={activePopoverSub?.id === s.id} openPopover={openPopover} closePopover={closePopover} onEdit={onEdit} onDelete={onDelete} />)}
 					</div>
 
 					<div className="section-head">

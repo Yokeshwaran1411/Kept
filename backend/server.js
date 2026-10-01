@@ -2,8 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
-const userService = require('./Services/userService.js');
-const serviceMgmt = require('./Services/serviceMgmt.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;

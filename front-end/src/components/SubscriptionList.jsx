@@ -6,8 +6,9 @@ import { getSubscriptions } from '../api';
 export default function SubscriptionList({ 
 	subscriptions, 
 	setSubscriptions, 
-	expandedCards, 
-	toggleCard, 
+	activePopoverSub,
+	openPopover,
+	closePopover,
 	setAddModalOpen, 
 	showToast,
 	userEmail,
@@ -160,8 +161,9 @@ export default function SubscriptionList({
 							{filteredSubscriptions.map(s => (
 								<SubCard
 									key={s.id} s={s}
-									isOpen={expandedCards[s.id]}
-									toggleCard={toggleCard}
+									isActive={activePopoverSub?.id === s.id}
+									openPopover={openPopover}
+									closePopover={closePopover}
 									onEdit={onEdit}
 									onDelete={onDelete}
 								/>
